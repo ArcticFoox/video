@@ -227,6 +227,9 @@ int main(){
     list<User_Node>::iterator it_u;
 
     string name;
+    string users;
+    cin >> name;
+
     string video_name;
     bool it = true;
     while(it){
