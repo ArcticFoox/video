@@ -1,97 +1,4 @@
-#include<iostream>
-#include<algorithm>
-#include<list>
-#include<vector>
-#include<string>
-using namespace std;
-
-struct Video_Node{
-    string video_name;
-    int video_num;
-    vector<string> User_name;
-
-    Video_Node(){}
-
-    Video_Node(string video_name){
-        this->video_name = video_name;
-        this->video_num = 1;
-    }
-};
-
-struct User_Node{
-    string name;
-    vector<string> Video_name;
-
-    User_Node(){}
-
-    User_Node(string name){
-        this->name = name;
-    }
-};
-
-void rent_video(list<User_Node>& user, list<Video_Node>& video, string video_name, string name){
-    list<Video_Node>::iterator it_v;
-    list<User_Node>::iterator it_u;
-    for(it_v = video.begin(); it_v != video.end(); it_v++){
-        if(it_v->video_num == 0){
-            cout << video_name << " is no stock\n";
-            return;
-        }
-        if(it_v->video_name == video_name){
-            it_v->video_num -= 1;
-            it_v->User_name.push_back(name);
-            //sort(it_v->User_name.begin(), it_v->User_name.end());
-            break;
-        }
-    }
-    for(it_u = user.begin(); it_u != user.end(); it_u++){
-        if(it_u->name == name){
-            it_u->Video_name.push_back(video_name);
-            //sort(it_u->Video_name.begin(), it_u->Video_name.end());
-            break;
-        }
-    }
-
-   
-}
-
-void return_video(list<User_Node>& user, list<Video_Node>& video, string name, string video_name){
-    list<Video_Node>::iterator it_v;
-    list<User_Node>::iterator it_u;
-    vector<string>::iterator it_user_video;
-    vector<string>::iterator it_video_user;
-    int i = 0, j = 0;
-    for(it_u = user.begin(); it_u != user.end(); it_u++){
-        if(it_u->name == name){
-            for(it_user_video = it_u->Video_name.begin(); it_user_video != it_u->Video_name.end(); it_user_video++){
-                if(/*it_u->Video_name.at(i)*/ it_user_video->data() == video_name){
-                    it_u->Video_name.erase(it_user_video);
-                    break;
-                }
-                i++;
-            }
-        }
-    }
-
-    for(it_v = video.begin(); it_v != video.end(); it_v++){
-        if(it_v->video_name == video_name){
-            for(it_video_user = it_v->User_name.begin(); it_video_user != it_v->User_name.end(); it_video_user++){
-                if(/*it_v->User_name.at(j)*/ it_video_user->data() == name){
-                    it_v->video_num += 1; 
-                    it_v->User_name.erase(it_video_user);
-                    return;
-                }
-                j++;
-            }
-        }
-    }
-
-}
-
-void add_user(list<User_Node>& user, string name){
-    user.push_back(name);
-    //user.sort(); <- 여기서 에러 발생
-}
+#include"video.h"
 
 void add_video(list<Video_Node>& video, string video_name){
     list<Video_Node>::iterator it_v;
@@ -129,7 +36,7 @@ void Video_discard(list<Video_Node>& video, string video_name){
         return ;
     }
 }
-// 문장 끝 뛰어쓰기 안된 부분이 있음
+
 void Video_search(list<Video_Node>& video, string video_name){
     list<Video_Node>::iterator it_v;
     bool find = false;
@@ -157,33 +64,6 @@ void Video_search(list<Video_Node>& video, string video_name){
         return ;
     }  
 }
-// 문장 끝 뛰어쓰기 안된 부분이 있음
-void User_search(list<User_Node>& user, string name){
-    list<User_Node>::iterator it_u;
-    bool find = false;
-
-    for(it_u = user.begin(); it_u != user.end(); it_u++){
-        if(it_u->name == name){
-            cout << it_u->name << " ";
-            for(int i = 0; i < it_u->Video_name.size(); i++){
-                if(i == it_u->Video_name.size() - 1){
-                    cout << it_u->Video_name.at(i) << "\n";
-                    break;
-                }
-                cout << it_u->Video_name.at(i) << ",";
-            }
-            find = true;
-            return;
-        }
-        else
-            continue;
-    }
-
-    if(!find){
-        cout << name << " is not found\n";
-        return ;
-    }  
-}
 
 void video_list(list<Video_Node>& video){
     list<Video_Node>::iterator it_v;
@@ -192,101 +72,11 @@ void video_list(list<Video_Node>& video){
         cout << it_v->video_name << " " << it_v->video_num << " ";
         for(int i = 0; i < it_v->User_name.size(); i++){
             if(i == it_v->User_name.size() - 1){
-                cout << it_v->User_name.at(i) << "\n";
+                cout << it_v->User_name.at(i);
                 break;
             }
             cout << it_v->User_name.at(i) << ",";
         }
         cout << "\n";
     }
-    cout << "\n";
-}
-
-void user_list(list<User_Node>& user){
-    list<User_Node>::iterator it_u;
-
-    for(it_u = user.begin(); it_u != user.end(); it_u++){ 
-        cout << it_u->name << " ";
-        for(int i = 0; i < it_u->Video_name.size(); i++){
-            if(i == it_u->Video_name.size() - 1){
-                cout << it_u->Video_name.at(i) << "\n";
-                break;
-            }
-            cout << it_u->Video_name.at(i) << ",";
-        }
-        cout << "\n";
-    }
-    cout << "\n";
-}
-
-int main(){
-    list<Video_Node> video;
-    list<User_Node> user;
-
-    list<Video_Node>::iterator it_v;
-    list<User_Node>::iterator it_u;
-
-    string name;
-    string users;
-    cin >> name;
-
-    string video_name;
-    bool it = true;
-    while(it){
-        int button;
-        cout << "add_user 1, add_video 2, search_user 3, search_video 4, rent 5, return 6, video discard 7, user list 8, video list 9" << "\n";
-        cin >> button;
-        switch(button){
-            case 1:
-                cout << "Enter the name\n";
-                cin >> name;
-                add_user(user, name);
-                break;
-            case 2:
-                cout << "Enter the video name\n";
-                cin >> video_name;
-                add_video(video, video_name);
-                break;
-            case 3:
-                cout << "Enter the name\n";
-                cin >> name;
-                User_search(user, name);
-                break;
-            case 4:
-                cout << "Enter the video name\n";
-                cin >> video_name;
-                Video_search(video, video_name);
-                break;
-            case 5:
-                cout << "Enter the name and video name\n";
-                cin >> name >> video_name;
-                rent_video(user, video, video_name, name);
-                break;
-            case 6:
-                cout << "Enter the name and video name\n";
-                cin >> name >> video_name;
-                return_video(user, video, name, video_name);
-                break;
-            case 7:
-                cout << "Enter the video name\n";
-                cin >> video_name;
-                Video_discard(video, video_name);
-                break;
-            case 8:
-                cout << "Name Video_list\n";
-                user_list(user);
-                break;
-            case 9:
-                cout << "Video_name Stock User_name\n";
-                video_list(video);
-                break;
-            case 10:
-                it = false;
-                break;
-            default:
-                cout << "wrong button try again" << "\n";
-                break; 
-        }
-    }
-    return 0;
 }
