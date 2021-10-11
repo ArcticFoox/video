@@ -6,9 +6,6 @@
 #include<fstream>
 using namespace std;
 
-ifstream readfromFile;
-ofstream writeFile;
-
 struct User_Node{
     string name;
     string ID;
@@ -35,13 +32,20 @@ struct Video_Node{
 };
 
 void add_user(list<User_Node>& user, string name, string ID);
+void add_video(list<Video_Node>& video, string name);
+
 
 void save_user(list<User_Node>& user){
+    ofstream writeFile;
+    list<User_Node>::iterator it_u;
     writeFile.open("userlist.txt");
     writeFile.clear();
-    list<User_Node>::iterator it_u;
 
     for(it_u = user.begin(); it_u != user.end(); it_u++){
+        if(it_u->name == ""){
+            continue;
+        }
+
         writeFile.write(it_u->name.c_str(), it_u->name.size());
         writeFile.write(" ", 1);
         writeFile.write(it_u->ID.c_str(), it_u->ID.size());
@@ -64,8 +68,10 @@ void save_user(list<User_Node>& user){
     }
     writeFile.close();
 }
-// 개선 필요 user.end() 말고 다른 접근 방식을 사용해야 할 듯함
+
 void load_user(list<User_Node>& user){
+    ifstream readfromFile;
+    list<User_Node>::iterator it_u;
     readfromFile.open("userlist.txt");
 
     if(readfromFile.is_open()){
@@ -78,21 +84,105 @@ void load_user(list<User_Node>& user){
 
             add_user(user, str1, str2);
             if(str3 == "X"){
-               continue;
+                continue;
             }
 
             else{
+                for(it_u = user.begin(); it_u != user.end(); it_u++){
+                    if(it_u->name == str1 && it_u->ID == str2) break;
+                }
 
                 for(int i = 0; i < str3.size(); i++){
                     if(str3[i] == ','){
-                        user.end()->Video_name.push_back(tmp);
+                        it_u->Video_name.push_back(tmp);
                         tmp = "";
                     }
                     else
                         tmp += str3[i];
 
                     if(i == str3.size() - 1){
-                        user.end()->Video_name.push_back(tmp);
+                        it_u->Video_name.push_back(tmp);
+                    }
+                }
+            }
+            
+        }
+        readfromFile.close();
+    }
+    return;
+};
+
+void save_video(list<Video_Node>& video){
+    ofstream writeFile;
+    list<Video_Node>::iterator it_v;
+    writeFile.open("videolist.txt");
+    writeFile.clear();
+
+    for(it_v = video.begin(); it_v != video.end(); it_v++){
+        if(it_v->video_name == ""){
+            continue;
+        }
+
+        writeFile.write(it_v->video_name.c_str(), it_v->video_name.size());
+        writeFile.write(" ", 1);
+        writeFile << (it_v->video_num);
+        writeFile.write(" ", 1);
+        if(it_v->User_name.empty()){
+            writeFile.write("X", 1);
+            writeFile.write("\n", 1);
+        }
+        else{
+            for(int i = 0; i < it_v->User_name.size(); i++){
+                if(i == it_v->User_name.size() - 1){
+                    writeFile.write(it_v->User_name.at(i).c_str(), it_v->User_name.at(i).size());
+                    writeFile.write("\n", 1);
+                    break;
+                }
+                writeFile.write(it_v->User_name.at(i).c_str(), it_v->User_name.at(i).size());
+                writeFile.write(",", 1);
+            }
+        }
+    }
+    writeFile.close();
+}
+
+void load_video(list<Video_Node>& video){
+    ifstream readfromFile;
+    list<Video_Node>::iterator it_v;
+    readfromFile.open("videolist.txt");
+
+    if(readfromFile.is_open()){
+        while(!readfromFile.eof()){
+            int num;
+            string str1, str2, tmp;
+
+            readfromFile >> str1;
+            readfromFile >> num;
+            readfromFile >> str2;
+
+            add_video(video, str1);
+
+            for(it_v = video.begin(); it_v != video.end(); it_v++){
+                if(it_v->video_name == str1) break;
+            }
+
+            if(str2 == "X"){
+                it_v->video_num = num;
+                continue;
+            }
+
+            else{
+                it_v->video_num = num;
+                for(int i = 0; i < str2.size(); i++){
+                    if(str2[i] == ','){
+                        it_v->User_name.push_back(tmp);
+                        tmp = "";
+                    }
+                    else
+                        tmp += str2[i];
+
+                    if(i == str2.size() - 1){
+                        it_v->User_name.push_back(tmp);
                     }
                 }
             }
@@ -111,7 +201,6 @@ bool user_compare(const User_Node& a, const User_Node& b){
     return a.name < b.name;
 }
 
-// 추가 목록 : 사용자 동명이인 처리
 void rent_video(list<User_Node>& user, list<Video_Node>& video, string video_name, string name, string ID){
     list<Video_Node>::iterator it_v;
     list<User_Node>::iterator it_u;
@@ -136,13 +225,13 @@ void rent_video(list<User_Node>& user, list<Video_Node>& video, string video_nam
     }
 }
 
-void return_video(list<User_Node>& user, list<Video_Node>& video, string name, string video_name){
+void return_video(list<User_Node>& user, list<Video_Node>& video, string name, string video_name, string ID){
     list<Video_Node>::iterator it_v;
     list<User_Node>::iterator it_u;
     vector<string>::iterator it_user_video;
     vector<string>::iterator it_video_user;
     for(it_u = user.begin(); it_u != user.end(); it_u++){
-        if(it_u->name == name){
+        if(it_u->name == name && it_u->ID == ID){
             for(it_user_video = it_u->Video_name.begin(); it_user_video != it_u->Video_name.end(); it_user_video++){
                 if(it_user_video->data() == video_name){
                     it_u->Video_name.erase(it_user_video);
@@ -282,6 +371,10 @@ void video_list(list<Video_Node>& video){
     list<Video_Node>::iterator it_v;
 
     for(it_v = video.begin(); it_v != video.end(); it_v++){
+        if(it_v->video_name == ""){
+            continue;
+        }
+
         cout << it_v->video_name << " " << it_v->video_num << " ";
         for(int i = 0; i < it_v->User_name.size(); i++){
             if(i == it_v->User_name.size() - 1){
@@ -321,7 +414,10 @@ int main(){
     string ID;
     bool it = true;
     load_user(user);
+    load_video(video);
     while(it){
+        save_user(user);
+        save_video(video);
         int button;
         cout << "add_user 1, add_video 2, search_user 3, search_video 4, rent 5, return 6, video discard 7, user list 8, video list 9" << "\n";
         cin >> button;
@@ -358,9 +454,9 @@ int main(){
                 rent_video(user, video, video_name, name, ID);
                 break;
             case 6:
-                cout << "Enter the name and video name\n";
-                cin >> name >> video_name;
-                return_video(user, video, name, video_name);
+                cout << "Enter the name, ID and video name\n";
+                cin >> name >> ID >> video_name;
+                return_video(user, video, name, video_name, ID);
                 break;
             case 7:
                 cout << "Enter the video name\n";
@@ -380,10 +476,7 @@ int main(){
                 cin >> name;
                 delete_user(user, name);
                 break;
-            case 11:
-                save_user(user);
-                break;
-            case 12: //왜 에러 표기가 뜨는지 알아 봐야 함
+            case 11: //왜 에러 표기가 뜨는지 알아 봐야 함
                 it = false;
                 break;
             default:
