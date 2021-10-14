@@ -16,11 +16,6 @@ struct User_Node{
     User_Node(string name){
         this->name = name;
     }
-
-    // User_Node(string name, string ID){
-    //     this->name = name;
-    //     this->ID = ID;
-    // }
 };
 // 비디오 구조체
 struct Video_Node{
@@ -219,37 +214,47 @@ void rent_video(list<User_Node>& user, list<Video_Node>& video, string video_nam
     list<Video_Node>::iterator it_v;
     list<User_Node>::iterator it_u;
     bool find = false;
-    //Video_Node를 돌면서 video_name를 가진 Node 검색
+    bool find2 = false;
+    //Video_Node 중 video_name과 같은 Node 검색
     for(it_v = video.begin(); it_v != video.end(); it_v++){
         if(it_v->video_name == video_name){
-            //비디오 재고가 없을 경우
-            if(it_v->video_num == 0){
-                cout << video_name << " is no stock\n";
-                return;
-            }
-            //비디오 재고가 있는 경우
-            it_v->video_num -= 1;
-            it_v->User_name.push_back(name);
-            sort(it_v->User_name.begin(), it_v->User_name.end());
             find = true;
             break;
         }
     }
-    //Video_Node에 video_name를 가진 Node가 있을 경우
-    if(find){
-        //User_Node에서 name과 ID가 일치하는 유저의 Video_name에 video_name 삽입
-        for(it_u = user.begin(); it_u != user.end(); it_u++){
-            if(it_u->name == name && it_u->ID == ID){
-                it_u->Video_name.push_back(video_name);
-                sort(it_u->Video_name.begin(), it_u->Video_name.end());
-                break;
-            }
+    //User_Node 중 name, ID가 같은 Node 검색
+    for(it_u = user.begin(); it_u != user.end(); it_u++){
+        if(it_u->name == name && it_u->ID == ID){
+            find2 = true;
+            break;
         }
-        cout << "It is rented\n";
     }
-    //Video_Node에 video_name를 가진 Node가 없을 경우
-    else
-        cout << "The video is not found\n";
+    //video_name과 name, ID 둘다 존재할 경우
+    if(find && find2){
+        //비디오 재고가 없을 경우
+        if(it_v->video_num == 0){
+            cout << video_name << " is no stock\n";
+            return;
+        }
+        //비디오 재고가 있을 경우
+        it_v->video_num -= 1;
+        it_v->User_name.push_back(name);
+        sort(it_v->User_name.begin(), it_v->User_name.end());
+        it_u->Video_name.push_back(video_name);
+        sort(it_u->Video_name.begin(), it_u->Video_name.end());
+    }
+
+    else{
+        //Video_Node에 video_name를 가진 Node가 없을 경우
+        if(!find && find2)
+            cout << "can't find the video\n";
+        //name과 ID가 일치하는 유저가 없을 경우
+        else if(find && !find2)
+            cout << "can't find the user\n";
+        //video_name과 name, ID 모두 없는 경우
+        else
+            cout << "can't find user and video\n";
+    }
 }
 //반납 함수
 void return_video(list<User_Node>& user, list<Video_Node>& video, string name, string video_name, string ID){
@@ -258,17 +263,24 @@ void return_video(list<User_Node>& user, list<Video_Node>& video, string name, s
     vector<string>::iterator it_user_video;
     vector<string>::iterator it_video_user;
     bool find = false;
+    bool find2 = false;
     //User_Node를 돌면서 name과 ID를 가진 Node 검색
     for(it_u = user.begin(); it_u != user.end(); it_u++){
         if(it_u->name == name && it_u->ID == ID){
             //name과 ID를 가진 Node 찾았으면 그 Node의 Video_name 중 입력받은 값이 있는지 검색
             for(it_user_video = it_u->Video_name.begin(); it_user_video != it_u->Video_name.end(); it_user_video++){
+                //Node의 Video_name 중 입력받은 값이 있을 경우
                 if(it_user_video->data() == video_name){
                     it_u->Video_name.erase(it_user_video);
                     sort(it_u->Video_name.begin(), it_u->Video_name.end());
                     find = true;
                     break;
                 }
+            }
+            //Node의 Video_name 중 입력받은 값이 없을 경우
+            if(!find){
+                cout << "can't find video\n";
+                return;
             }
         }
     }
@@ -279,16 +291,23 @@ void return_video(list<User_Node>& user, list<Video_Node>& video, string name, s
             if(it_v->video_name == video_name){
                 //video_name를 가진 Node 찾았으면 그 Node의 User_name 중 입력받은 값이 있는지 검색
                 for(it_video_user = it_v->User_name.begin(); it_video_user != it_v->User_name.end(); it_video_user++){
+                    //Node의 User_name 중 입력받은 값이 있을 경우
                     if(it_video_user->data() == name){
                         it_v->video_num += 1; 
                         it_v->User_name.erase(it_video_user);
                         sort(it_v->User_name.begin(), it_v->User_name.end());
-                        cout << "It is returned\n";
-                        return;
+                        find2 = true;
+                        break;
                     }
                 }
             }
         }
+        //video_name를 가진 Node가 있을 경우
+        if(find2)
+            cout << "It is returned\n";
+        //video_name를 가진 Node가 없을 경우
+        else
+            cout << "can't find video\n";
     }
     //name과 ID를 가진 Node가 없을 경우
     else
@@ -447,6 +466,8 @@ void video_list(list<Video_Node>& video){
 // 유저 삭제 함수
 void delete_user(list<User_Node>& user, string name){
     int n;
+    int t;
+    bool find = true;
     list<User_Node>::iterator it_u;
     vector<list<User_Node>::iterator> tmp;
     //User_Node 중 name 유무 검색
@@ -460,27 +481,75 @@ void delete_user(list<User_Node>& user, string name){
     for(int i = 0; i < tmp.size(); i++){
         cout << i + 1 << " " << tmp.at(i)->name << " " << tmp.at(i)->ID << "\n";
     }
-    cout << "number : ";
-    cin >> n;
+    //삭제할 tmp 인자 선택
+    while(find){
+        cout << "number : ";
+        cin >> n;
+        if(!cin){
+            cout << "wrong button try again" << "\n";
+            cin.clear();
+            cin.ignore(256, '\n');
+            continue;
+        }
+
+        if(n >= tmp.size()){
+            cout << "wrong button try again" << "\n";
+            continue;
+        }
+
+        find = false;
+    }
+    //선택된 유저가 rent 중 일 경우
+    if(!tmp.at(n - 1)->Video_name.empty()){
+        cout << "Are you sure about it? this user is on renting\n";
+        cout << "1.yes   2.no\n";
+        while(!find){
+            cin >> t;
+            if(!cin){
+                cout << "wrong button try again" << "\n";
+                cin.clear();
+                cin.ignore(256, '\n');
+                continue;
+            }
+
+            if(t >= 3){
+                cout << "wrong button try again" << "\n";
+                continue;
+            }
+
+            find = true;
+        }
+        if(t == 1){
+            user.erase(tmp.at(n - 1));
+            cout << "Delete it\n";
+            return;
+        }
+        else
+            return;
+    }
 
     user.erase(tmp.at(n - 1));
     cout << "Delete it\n";
 }
 
 int main(){
+    //구조체, 변수 선언
     list<Video_Node> video;
     list<User_Node> user;
     string name;
     string video_name;
     string ID;
     bool it = true;
+    //시작 시 파일 불러오기
     load_user(user);
     load_video(video);
     while(it){
+        //매 반복마다 저장
         save_user(user);
         save_video(video);
         int button;
-        cout << "add_user 1, add_video 2, search_user 3, search_video 4, rent 5, return 6, video discard 7, user list 8, video list 9" << "\n";
+        cout << "add_user 1, add_video 2, search_user 3, search_video 4, rent 5, ";
+        cout << "return 6, video discard 7, delete user 8, video list 9, user list 10, esc 11" << "\n";
         cin >> button;
         if(!cin){
             cout << "wrong button try again" << "\n";
@@ -529,19 +598,19 @@ int main(){
                 Video_discard(video, video_name);
                 break;
             case 8:
-                cout << "Name Video_list\n";
-                user_list(user);
+                cout << "Enter the name\n";
+                cin >> name;
+                delete_user(user, name);
                 break;
             case 9:
                 cout << "Video_name Stock User_name\n";
                 video_list(video);
                 break;
             case 10:
-                cout << "Enter the name\n";
-                cin >> name;
-                delete_user(user, name);
+                cout << "Name Video_list\n";
+                user_list(user);
                 break;
-            case 11: //왜 에러 표기가 뜨는지 알아 봐야 함
+            case 11:
                 it = false;
                 break;
             default:
